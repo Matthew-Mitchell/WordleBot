@@ -1,10 +1,9 @@
 import nltk
 from collections import Counter
-from functools import reduce
-import seaborn as sns
-import matplotlib.pyplot as plt
+# from functools import reduce
 import pandas as pd
 import numpy as np
+from mTimer import mtimer
 
 def letterfy(word_list) :
     return [element.lower() for w in word_list for element in list(set(w))]
@@ -102,13 +101,39 @@ class WordleBot:
         guessList = list(guessList)
         scores = []
         words_and_scores = []
-        for word in guessList:
+        timer = mtimer(guessList)
+        cutoff = 10 #Maximum allowable compute time in seconds
+        for i, word in enumerate(guessList):
+            timer.progress(i)
             haystacks = self.simulate(word)
-            score = np.mean(haystacks)
+            score = round(np.mean(haystacks),2)
             scores.append(score)
             words_and_scores.append((word, score))
             if toPrint:
-                print(word, score)
+                print(f"{word} - average guesses till solution: {round(score,2)}")
+            if (timer.estimated_process_length) and (timer.estimated_process_length)>cutoff:
+                print("\nLong compute time. Defaulting to heuristic sampling.")
+                df = self.words_df
+                counts = Counter()
+                for col in df.columns[1:]:
+                    counts += Counter(df[col])
+                    
+                temp = df.set_index('word').copy()
+                for col in temp.columns:
+                    temp[col] = temp[col].map(counts)
+                #Ensure 5 unique letters
+                temp = temp[temp.nunique(axis=1)==5]
+                temp = temp.sum(axis=1).sort_values(ascending=False)
+                guessList = list(temp.sample(10, weights=temp).index)
+                timer.len_tot = len(guessList)
+                for i, word in enumerate(guessList):
+                    timer.progress(i)
+                    haystacks = self.simulate(word)
+                    score = round(np.mean(haystacks),2)
+                    scores.append(score)
+                    words_and_scores.append((word, score))
+                break
+
         min_idx = np.argmin(scores)
         best_score = scores[min_idx]
         best_word = guessList[min_idx]
@@ -117,7 +142,7 @@ class WordleBot:
             print ("Best score: {} From word: {}".format(best_score, best_word))
         words_and_scores = sorted(words_and_scores, key=lambda x: x[1])
         self.words_and_scores = words_and_scores
-
+        timer.complete()
     def clue_update(self, guessword, response):
     	query = clue_Update_Query(guessword, response)
     	self.words_df = self.words_df.query(query)
