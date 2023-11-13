@@ -1,3 +1,6 @@
+# Welcome to WordleBot! 
+### Here's an excerpt from the Jupyter Notebook on how to run WordleBot:
+
 ```python
 from wordleBot import *
 ```
@@ -21,10 +24,10 @@ len(bot.words_df)
 
 ### Enter Your Guess and The Game's Response
 
-To Enter The Game's Response, Enter a string:
-R - Red: letter is not in the puzzle's secret word
-Y - Yellow: letter is in the puzzle, but in a different position
-G = Green: correct letter in the correct placement
+To Enter The Game's Response, Enter a string:  
+R - Red: letter is not in the puzzle's secret word  
+Y - Yellow: letter is in the puzzle, but in a different position  
+G = Green: correct letter in the correct placement  
 
 For example, 
 
